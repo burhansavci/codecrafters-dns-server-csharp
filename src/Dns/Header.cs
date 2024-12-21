@@ -20,7 +20,7 @@ public record Header(
     public Span<byte> ToSpan()
     {
         // The header section is always 12 bytes long. Integers are encoded in big-endian format.
-        Span<byte> bytes = new(new byte[12]);
+        Span<byte> bytes = new byte[12];
 
         BinaryPrimitives.WriteInt16BigEndian(bytes, Id);
 

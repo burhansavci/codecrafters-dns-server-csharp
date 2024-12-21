@@ -29,11 +29,14 @@ while (true)
         false,
         0,
         0,
-        0,
+        1,
         0,
         0,
         0);
-    Message message = new(header);
+
+    Question question = new("codecrafters.io", QuestionType.A, QuestionClass.IN);
+
+    Message message = new(header, [question]);
 
     // Create an empty response
     byte[] response = message.ToSpan().ToArray();
