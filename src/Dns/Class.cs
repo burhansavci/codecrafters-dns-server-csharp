@@ -1,6 +1,6 @@
 namespace codecrafters_dns_server.Dns;
 
-public enum QuestionClass
+public enum Class
 {
     /// <summary>
     /// the Internet

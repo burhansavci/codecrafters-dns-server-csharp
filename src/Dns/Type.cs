@@ -1,6 +1,6 @@
 namespace codecrafters_dns_server.Dns;
 
-public enum QuestionType
+public enum Type
 {
     /// <summary>
     /// a host address

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using codecrafters_dns_server.Dns;
+using Type = codecrafters_dns_server.Dns.Type;
 
 // Resolve UDP address
 IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
@@ -30,13 +31,15 @@ while (true)
         0,
         0,
         1,
-        0,
+        1,
         0,
         0);
 
-    Question question = new("codecrafters.io", QuestionType.A, QuestionClass.IN);
+    Question question = new(new Name("codecrafters.io"), Type.A, Class.IN);
 
-    Message message = new(header, [question]);
+    Answer answer = new([new ResourceRecord(new Name("codecrafters.io"), Type.A, Class.IN, 60, [8, 8, 8, 8])]);
+
+    Message message = new(header, [question], [answer]);
 
     // Create an empty response
     byte[] response = message.ToSpan().ToArray();

@@ -1,37 +1,22 @@
 using System.Buffers.Binary;
-using System.Text;
 
 namespace codecrafters_dns_server.Dns;
 
-public record Question(string Name, QuestionType Type, QuestionClass Class)
+public record Question(Name Name, Type Type, Class Class)
 {
-    private const char DomainSeparator = '.';
-
     private const int TypeSize = 2;
-
     private const int ClassSize = 2;
-
-    private const int VariableLengthSize = 1;
 
     public Span<byte> ToSpan()
     {
-        var nameParts = Name.Split(DomainSeparator);
-
-        var nameLength = nameParts.Sum(part => VariableLengthSize + part.Length);
-        nameLength++; // Terminal zero byte
-
-        var totalLength = nameLength + TypeSize + ClassSize;
+        var nameBytes = Name.ToSpan();
+        var totalLength = nameBytes.Length + TypeSize + ClassSize;
 
         Span<byte> bytes = new byte[totalLength];
 
         var position = 0;
-        foreach (var part in nameParts)
-        {
-            bytes[position++] = (byte)part.Length;
-            Encoding.ASCII.GetBytes(part, bytes[position..]);
-            position += part.Length;
-        }
-        bytes[position++] = 0;
+        nameBytes.CopyTo(bytes);
+        position += nameBytes.Length;
 
         BinaryPrimitives.WriteInt16BigEndian(bytes[position..], (short)Type);
         position += TypeSize;
