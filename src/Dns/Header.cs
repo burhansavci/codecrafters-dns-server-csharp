@@ -17,26 +17,29 @@ public record Header(
     short AuthorityRecordCount,
     short AdditionalRecordCount)
 {
-    public static Header FromBytes(byte[] data)
-    {
-        var dataSpan = data[..12].AsSpan();
+    // The header section is always 12 bytes long.
+    public const int Size = 12;
 
-        var opCode = (byte)((dataSpan[2] & 0b01111000) >> 3);
+    public static Header Parse(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.Length != Size) throw new ArgumentException("Header data must be 12 bytes long", nameof(bytes));
+
+        var opCode = (byte)((bytes[2] & 0b01111000) >> 3);
 
         Header header = new(
-            Id: BinaryPrimitives.ReadInt16BigEndian(dataSpan),
+            Id: BinaryPrimitives.ReadInt16BigEndian(bytes),
             QueryResponseIndicator: true,
             OperationCode: opCode,
-            AuthoritativeAnswer: (dataSpan[2] & 0b00000100) != 0,
-            Truncation: (dataSpan[2] & 0b00000010) != 0,
-            RecursionDesired: (dataSpan[2] & 0b00000001) != 0,
-            RecursionAvailable: (dataSpan[3] & 0b10000000) != 0,
-            Reserved: (byte)((dataSpan[3] & 0b01110000) >> 4),
+            AuthoritativeAnswer: (bytes[2] & 0b00000100) != 0,
+            Truncation: (bytes[2] & 0b00000010) != 0,
+            RecursionDesired: (bytes[2] & 0b00000001) != 0,
+            RecursionAvailable: (bytes[3] & 0b10000000) != 0,
+            Reserved: (byte)((bytes[3] & 0b01110000) >> 4),
             ResponseCode: (byte)(opCode == 0 ? 0 : 4), // 0 (no error) if OPCODE is 0 (standard query) else 4 (not implemented)
-            QuestionCount: BinaryPrimitives.ReadInt16BigEndian(dataSpan[4..]),
+            QuestionCount: BinaryPrimitives.ReadInt16BigEndian(bytes[4..]),
             AnswerRecordCount: 1,
-            AuthorityRecordCount: BinaryPrimitives.ReadInt16BigEndian(dataSpan[8..]),
-            AdditionalRecordCount: BinaryPrimitives.ReadInt16BigEndian(dataSpan[10..])
+            AuthorityRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[8..]),
+            AdditionalRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[10..])
         );
 
         return header;
@@ -44,9 +47,9 @@ public record Header(
 
     public Span<byte> ToSpan()
     {
-        // The header section is always 12 bytes long. Integers are encoded in big-endian format.
-        Span<byte> bytes = new byte[12];
+        Span<byte> bytes = new byte[Size];
 
+        //Integers are encoded in big-endian format.
         BinaryPrimitives.WriteInt16BigEndian(bytes, Id);
 
         bytes[2] = (byte)((QueryResponseIndicator ? 1 : 0) << 7);

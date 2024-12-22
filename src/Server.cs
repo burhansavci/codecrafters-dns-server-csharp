@@ -21,11 +21,15 @@ while (true)
 
     Console.WriteLine($"Received {receivedData.Length} bytes from {sourceEndPoint}: {receivedString}");
 
-    Header header = Header.FromBytes(receivedData);
+    Header header = Header.Parse(receivedData.AsSpan()[..Header.Size]);
 
-    Question question = new(new Name("codecrafters.io"), Type.A, Class.IN);
+    var name = Name.Parse(receivedData.AsSpan()[Header.Size..]);
 
-    Answer answer = new([new ResourceRecord(new Name("codecrafters.io"), Type.A, Class.IN, 60, [8, 8, 8, 8])]);
+    Console.WriteLine(name);
+
+    Question question = new(name, Type.A, Class.IN);
+
+    Answer answer = new([new ResourceRecord(name, Type.A, Class.IN, 60, [8, 8, 8, 8])]);
 
     Message message = new(header, [question], [answer]);
 

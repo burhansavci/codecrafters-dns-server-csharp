@@ -6,6 +6,22 @@ public record Name(string Value)
 {
     private const char DomainSeparator = '.';
     private const int VariableLengthSize = 1;
+    
+    public static Name Parse(ReadOnlySpan<byte> bytes)
+    {
+        var position = 0;
+        var nameParts = new List<string>();
+        while (bytes[position] != 0)
+        {
+            var partLength = bytes[position];
+            position++;
+            var part = Encoding.ASCII.GetString(bytes[position..(position + partLength)]);
+            nameParts.Add(part);
+            position += partLength;
+        }
+
+        return new Name(string.Join(DomainSeparator, nameParts));
+    }
 
     public Span<byte> ToSpan()
     {
