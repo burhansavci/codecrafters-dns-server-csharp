@@ -45,7 +45,7 @@ public record Header(
         return header;
     }
 
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
         Span<byte> bytes = new byte[Size];
 

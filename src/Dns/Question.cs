@@ -7,9 +7,9 @@ public record Question(Name Name, Type Type, Class Class)
     private const int TypeSize = 2;
     private const int ClassSize = 2;
 
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
-        var nameBytes = Name.ToSpan();
+        var nameBytes = Name.ToReadonlySpan();
         var totalLength = nameBytes.Length + TypeSize + ClassSize;
 
         Span<byte> bytes = new byte[totalLength];

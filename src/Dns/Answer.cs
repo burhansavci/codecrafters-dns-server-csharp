@@ -4,12 +4,12 @@ namespace codecrafters_dns_server.Dns;
 
 public record Answer(List<ResourceRecord> ResourceRecords)
 {
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
         List<byte> resourceRecordsBytes = [];
         foreach (var resourceRecord in ResourceRecords)
         {
-            resourceRecordsBytes.AddRange(resourceRecord.ToSpan().ToArray());
+            resourceRecordsBytes.AddRange(resourceRecord.ToReadonlySpan().ToArray());
         }
 
         return resourceRecordsBytes.ToArray();
@@ -23,9 +23,9 @@ public record ResourceRecord(Name Name, Type Type, Class Class, int TimeToLive, 
     private const int TimeToLiveSize = 4;
     private const int DataLengthSize = 2;
 
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
-        var nameBytes = Name.ToSpan();
+        var nameBytes = Name.ToReadonlySpan();
         var totalLength = nameBytes.Length + TypeSize + ClassSize + TimeToLiveSize + DataLengthSize + Data.Length;
 
         Span<byte> bytes = new byte[totalLength];

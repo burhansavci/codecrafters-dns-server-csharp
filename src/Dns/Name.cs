@@ -23,7 +23,7 @@ public record Name(string Value)
         return new Name(string.Join(DomainSeparator, nameParts));
     }
 
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
         var nameParts = Value.Split(DomainSeparator);
 

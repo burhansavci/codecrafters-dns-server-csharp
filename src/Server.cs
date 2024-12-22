@@ -25,8 +25,6 @@ while (true)
 
     var name = Name.Parse(receivedData.AsSpan()[Header.Size..]);
 
-    Console.WriteLine(name);
-
     Question question = new(name, Type.A, Class.IN);
 
     Answer answer = new([new ResourceRecord(name, Type.A, Class.IN, 60, [8, 8, 8, 8])]);
@@ -34,7 +32,7 @@ while (true)
     Message message = new(header, [question], [answer]);
 
     // Create an empty response
-    byte[] response = message.ToSpan().ToArray();
+    byte[] response = message.ToReadonlySpan().ToArray();
 
     // Send response
     udpClient.Send(response, response.Length, sourceEndPoint);

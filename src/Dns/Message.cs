@@ -2,20 +2,20 @@ namespace codecrafters_dns_server.Dns;
 
 public record Message(Header Header, Question[] Questions, Answer[] Answers)
 {
-    public Span<byte> ToSpan()
+    public ReadOnlySpan<byte> ToReadonlySpan()
     {
-        Span<byte> headerBytes = Header.ToSpan();
+        var headerBytes = Header.ToReadonlySpan();
 
         List<byte> questionsBytes = [];
         foreach (var question in Questions)
         {
-            questionsBytes.AddRange(question.ToSpan().ToArray());
+            questionsBytes.AddRange(question.ToReadonlySpan().ToArray());
         }
         
         List<byte> answersBytes = [];
         foreach (var answer in Answers)
         {
-            answersBytes.AddRange(answer.ToSpan().ToArray());
+            answersBytes.AddRange(answer.ToReadonlySpan().ToArray());
         }
 
         List<byte> messageBytes = [];
