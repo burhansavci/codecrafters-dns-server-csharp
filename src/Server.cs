@@ -21,19 +21,7 @@ while (true)
 
     Console.WriteLine($"Received {receivedData.Length} bytes from {sourceEndPoint}: {receivedString}");
 
-    Header header = new(1234,
-        true,
-        0,
-        false,
-        false,
-        false,
-        false,
-        0,
-        0,
-        1,
-        1,
-        0,
-        0);
+    Header header = Header.FromBytes(receivedData);
 
     Question question = new(new Name("codecrafters.io"), Type.A, Class.IN);
 
