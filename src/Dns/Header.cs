@@ -23,22 +23,20 @@ public record Header(
     public static Header Parse(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != Size) throw new ArgumentException("Header data must be 12 bytes long", nameof(bytes));
-
-        var opCode = (byte)((bytes[2] & 0b01111000) >> 3);
-
+        
         Header header = new(
-            Id: BinaryPrimitives.ReadInt16BigEndian(bytes),
-            QueryResponseIndicator: true,
-            OperationCode: opCode,
+            Id: BinaryPrimitives.ReadInt16BigEndian(bytes[..2]),
+            QueryResponseIndicator: (bytes[2] & 0b10000000) != 0,
+            OperationCode: (byte)((bytes[2] & 0b01111000) >> 3),
             AuthoritativeAnswer: (bytes[2] & 0b00000100) != 0,
             Truncation: (bytes[2] & 0b00000010) != 0,
             RecursionDesired: (bytes[2] & 0b00000001) != 0,
             RecursionAvailable: (bytes[3] & 0b10000000) != 0,
             Reserved: (byte)((bytes[3] & 0b01110000) >> 4),
-            ResponseCode: (byte)(opCode == 0 ? 0 : 4), // 0 (no error) if OPCODE is 0 (standard query) else 4 (not implemented)
-            QuestionCount: BinaryPrimitives.ReadInt16BigEndian(bytes[4..]),
-            AnswerRecordCount: 1,
-            AuthorityRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[8..]),
+            ResponseCode: (byte)(bytes[3] & 0b00001111),
+            QuestionCount: BinaryPrimitives.ReadInt16BigEndian(bytes[4..6]),
+            AnswerRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[6..8]),
+            AuthorityRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[8..10]),
             AdditionalRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[10..])
         );
 
