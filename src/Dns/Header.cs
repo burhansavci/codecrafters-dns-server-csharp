@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 namespace codecrafters_dns_server.Dns;
 
 public record Header(
-    short Id,
+    ushort Id,
     bool QueryResponseIndicator,
     byte OperationCode, // 4 bits
     bool AuthoritativeAnswer,
@@ -12,10 +12,10 @@ public record Header(
     bool RecursionAvailable,
     byte Reserved, // 3 bits
     byte ResponseCode, // 4 bits
-    short QuestionCount,
-    short AnswerRecordCount,
-    short AuthorityRecordCount,
-    short AdditionalRecordCount)
+    ushort QuestionCount,
+    ushort AnswerRecordCount,
+    ushort AuthorityRecordCount,
+    ushort AdditionalRecordCount)
 {
     // The header section is always 12 bytes long.
     public const int Size = 12;
@@ -25,7 +25,7 @@ public record Header(
         if (bytes.Length != Size) throw new ArgumentException("Header data must be 12 bytes long", nameof(bytes));
         
         Header header = new(
-            Id: BinaryPrimitives.ReadInt16BigEndian(bytes[..2]),
+            Id: BinaryPrimitives.ReadUInt16BigEndian(bytes[..2]),
             QueryResponseIndicator: (bytes[2] & 0b10000000) != 0,
             OperationCode: (byte)((bytes[2] & 0b01111000) >> 3),
             AuthoritativeAnswer: (bytes[2] & 0b00000100) != 0,
@@ -34,10 +34,10 @@ public record Header(
             RecursionAvailable: (bytes[3] & 0b10000000) != 0,
             Reserved: (byte)((bytes[3] & 0b01110000) >> 4),
             ResponseCode: (byte)(bytes[3] & 0b00001111),
-            QuestionCount: BinaryPrimitives.ReadInt16BigEndian(bytes[4..6]),
-            AnswerRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[6..8]),
-            AuthorityRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[8..10]),
-            AdditionalRecordCount: BinaryPrimitives.ReadInt16BigEndian(bytes[10..])
+            QuestionCount: BinaryPrimitives.ReadUInt16BigEndian(bytes[4..6]),
+            AnswerRecordCount: BinaryPrimitives.ReadUInt16BigEndian(bytes[6..8]),
+            AuthorityRecordCount: BinaryPrimitives.ReadUInt16BigEndian(bytes[8..10]),
+            AdditionalRecordCount: BinaryPrimitives.ReadUInt16BigEndian(bytes[10..])
         );
 
         return header;
@@ -48,7 +48,7 @@ public record Header(
         Span<byte> bytes = new byte[Size];
 
         //Integers are encoded in big-endian format.
-        BinaryPrimitives.WriteInt16BigEndian(bytes, Id);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes, Id);
 
         bytes[2] = (byte)((QueryResponseIndicator ? 1 : 0) << 7);
 
@@ -66,13 +66,13 @@ public record Header(
 
         bytes[3] |= ResponseCode;
 
-        BinaryPrimitives.WriteInt16BigEndian(bytes[4..], QuestionCount);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes[4..6], QuestionCount);
 
-        BinaryPrimitives.WriteInt16BigEndian(bytes[6..], AnswerRecordCount);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes[6..8], AnswerRecordCount);
 
-        BinaryPrimitives.WriteInt16BigEndian(bytes[8..], AuthorityRecordCount);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes[8..10], AuthorityRecordCount);
 
-        BinaryPrimitives.WriteInt16BigEndian(bytes[10..], AdditionalRecordCount);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes[10..], AdditionalRecordCount);
 
         return bytes;
     }

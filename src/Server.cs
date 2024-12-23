@@ -37,7 +37,6 @@ while (true)
         responseAnswers[i] = new Answer([new ResourceRecord(question.Name, question.Type, question.Class, 60, [8, 8, 8, 8])]);
     }
 
-    Console.WriteLine($"Request Id: {request.Header.Id}");
     Header responseHeader = new(request.Header.Id,
         true,
         request.Header.OperationCode,
@@ -47,8 +46,8 @@ while (true)
         false,
         0,
         (byte)(request.Header.OperationCode == 0 ? 0 : 4), // 0 (no error) if OPCODE is 0 (standard query) else 4 (not implemented)
-        (short)responseQuestions.Length,
-        (short)responseAnswers.Length,
+        (ushort)responseQuestions.Length,
+        (ushort)responseAnswers.Length,
         0,
         0);
 
