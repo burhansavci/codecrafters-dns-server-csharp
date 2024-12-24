@@ -9,6 +9,7 @@ public record Name(string Value)
     private const int VariableLengthSize = 1;
     private const int PointerMask = 0b11000000;
     private const int OffsetMask = 0b00111111_11111111;
+    private const int PointerSize = 2;
 
     public ReadOnlySpan<byte> ToReadonlySpan()
     {
@@ -35,43 +36,58 @@ public record Name(string Value)
     public static (Name Name, int BytesRead) Parse(ReadOnlySpan<byte> bytes, int startPosition = 0)
     {
         var nameParts = new List<string>();
-        var isPointerFollowed = false;
-        var position = startPosition;
-        var originalPosition = startPosition;
+        var parsingState = new ParsingState(startPosition);
 
-        while (bytes[originalPosition] != 0)
+        while (!IsEndOfName(bytes, parsingState.OriginalPosition))
         {
-            if ((bytes[originalPosition] & PointerMask) == PointerMask)
+            if (IsPointer(bytes, parsingState.OriginalPosition))
             {
-                var offset = BinaryPrimitives.ReadInt16BigEndian(bytes[originalPosition..]);
-                position = offset & OffsetMask; // Extract the offset value
-
-                if (!isPointerFollowed)
-                {
-                    // Only advance the original position once when we first encounter a pointer
-                    originalPosition += 2;
-                    isPointerFollowed = true;
-                }
-
+                HandlePointer(bytes, parsingState);
                 continue;
             }
 
-            var labelLength = bytes[position++];
-            var label = Encoding.ASCII.GetString(bytes[position..(position + labelLength)]);
-            nameParts.Add(label);
-            position += labelLength;
+            nameParts.Add(ParsePart(bytes, parsingState));
 
-            if (!isPointerFollowed)
-            {
-                originalPosition = position;
-            }
+            if (!parsingState.IsPointerFollowed)
+                parsingState.OriginalPosition = parsingState.CurrentPosition;
         }
 
-        if (!isPointerFollowed)
+        if (!parsingState.IsPointerFollowed)
+            parsingState.OriginalPosition++; // Account for the terminal zero byte
+
+        var domainName = new Name(string.Join(DomainSeparator, nameParts));
+        return (domainName, parsingState.OriginalPosition - startPosition);
+    }
+
+    private static bool IsEndOfName(ReadOnlySpan<byte> bytes, int position) => bytes[position] == 0;
+
+    private static bool IsPointer(ReadOnlySpan<byte> bytes, int position) => (bytes[position] & PointerMask) == PointerMask;
+
+    private static void HandlePointer(ReadOnlySpan<byte> bytes, ParsingState state)
+    {
+        var offset = BinaryPrimitives.ReadInt16BigEndian(bytes[state.OriginalPosition..]);
+        state.CurrentPosition = offset & OffsetMask;
+
+        if (!state.IsPointerFollowed)
         {
-            originalPosition++; // Account for the terminal zero byte
+            state.OriginalPosition += PointerSize;
+            state.IsPointerFollowed = true;
         }
+    }
 
-        return (new Name(string.Join(DomainSeparator, nameParts)), originalPosition - startPosition);
+    private static string ParsePart(ReadOnlySpan<byte> bytes, ParsingState state)
+    {
+        var partLength = bytes[state.CurrentPosition++];
+
+        var part = Encoding.ASCII.GetString(bytes[state.CurrentPosition..(state.CurrentPosition + partLength)]);
+        state.CurrentPosition += partLength;
+        return part;
+    }
+
+    private class ParsingState(int startPosition)
+    {
+        public int CurrentPosition { get; set; } = startPosition;
+        public int OriginalPosition { get; set; } = startPosition;
+        public bool IsPointerFollowed { get; set; }
     }
 }
