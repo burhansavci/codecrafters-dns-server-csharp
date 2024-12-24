@@ -38,7 +38,7 @@ public record Name(string Value)
         var nameParts = new List<string>();
         var parsingState = new ParsingState(startPosition);
 
-        while (!IsEndOfName(bytes, parsingState.OriginalPosition))
+        while (!IsEndOfName(bytes, parsingState.OriginalPosition) || (parsingState.IsPointerFollowed && !IsEndOfName(bytes, parsingState.CurrentPosition)))
         {
             if (IsPointer(bytes, parsingState.OriginalPosition))
             {

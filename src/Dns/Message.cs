@@ -14,8 +14,16 @@ public record Message(Header Header, Question[] Questions, Answer[] Answers)
             questions[i] = question;
             position += bytesRead;
         }
+        
+        var answers = new Answer[header.AnswerRecordCount];
+        for (int i = 0; i < header.AnswerRecordCount; i++)
+        {
+            var (answer, bytesRead) = Answer.Parse(bytes, position);
+            answers[i] = answer;
+            position += bytesRead;
+        }
 
-        return new Message(header, questions, []);
+        return new Message(header, questions, answers);
     }
 
     public ReadOnlySpan<byte> ToReadonlySpan()
